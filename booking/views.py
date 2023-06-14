@@ -211,6 +211,7 @@ def index(request):
         
         if butt_text == "Отменить бронь":
             Session.objects.get(vk_id=user_vk_id).delete(bot=bot)
+            can_book = True
             send_message(user_vk_id, "Бронь отменена! \nТеперь ты снова можешь забронировать сессию!", create_kb_book(can_book))
         
         if butt_text == "Мои сессии": 
