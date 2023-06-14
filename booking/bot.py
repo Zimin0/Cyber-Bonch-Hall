@@ -134,9 +134,9 @@ class Bot():
         Проверяет, можно ли забронировать данный компьютер на данное время.
         """
         # проверяем левую границу временного промежутка
-        if TimePeriod.objects.filter(time=time, computer=pc).values('status').first().status == 'F':
+        if TimePeriod.objects.filter(time=time, computer=pc).values('status').first()['status'] == 'F':
             # проверяем правую границу временного промежутка
-            if TimePeriod.objects.filter(time=self.get_right_edge(time), computer=pc).values('status').first().status == 'F':
+            if TimePeriod.objects.filter(time=self.get_right_edge(time), computer=pc).values('status').first()['status'] == 'F':
                 return True
         return False
 
