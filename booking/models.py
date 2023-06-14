@@ -47,7 +47,7 @@ class TimePeriod(models.Model):
         return str(self.time)
     
     @staticmethod
-    def convert_to_second(hours=0, minutes=0): 
+    def convert_to_second(hours=0, minutes=0) -> int: 
         """Переводит из часов и минут в секунды с начала дня (с 00:00)"""
         return (hours * 60 + minutes) * 60
 

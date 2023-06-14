@@ -96,25 +96,32 @@ class Bot():
         """ Проверяет, было ли сообщение напечатано юзером или отправлено через кнопку."""
         return 'payload' not in data['object']['message']
 
-    def is_possible_to_book(self, user_vk_id:int, start_test_time:str) -> bool:
+    def is_possible_to_book(self, user_vk_id:int) -> bool:
+        """ Проверяет, можно ли забронировать эту сессию юзеру - можно бронировать только одну сессию вперед. \nПотом бронь открывается только после конца сессии. """
 
-        # !!!!! добавить отчет об отказе брони
+        last_booked_session = Session.objects.filter(vk_id=user_vk_id).last()
+        now_time = '20:00' #TimePeriod.get_now_time_str()
 
-        """ Проверяет, можно ли забронировать эту сессию юзеру(подряд 2 нельзя). И соседние сессии тоже бранировать нельзя."""
-        sessions = Session.objects.filter(vk_id=user_vk_id).values('time_start')
-        
-        if DEBUG: print(f" Сессии пользователя {user_vk_id} = {sessions}")
-        for s in sessions:
-            if abs(self.__ready_to_book_list.index(s['time_start']) - self.__ready_to_book_list.index(start_test_time)) <= 4:
-                if DEBUG: print(f"Сессию {s.time_start}:{s.time_end} НЕЛЬЗЯ забронировать! (Пользователь: {user_vk_id})")
+        if last_booked_session.exists():
+            if not(TimePeriod.compare_two_str_time(now_time, last_booked_session.time_end)): #####!!!!!!!!1 переписать
                 return False
-            
-            elif sessions.count() >= AMOUNT_OF_SESSIONS_IN_A_DAY_FOR_ONE_USER:
-                if DEBUG: print(f"Ограничение по кол-ву сессий для одного юзера в день. (Пользователь: {user_vk_id})")
-                return False 
-            
-        if DEBUG: print(f"Сессию {start_test_time} МОЖНО забронировать! (Пользователь: {user_vk_id})")
         return True
+
+        # """ Проверяет, можно ли забронировать эту сессию юзеру(подряд 2 нельзя). И соседние сессии тоже бранировать нельзя."""
+        # sessions = Session.objects.filter(vk_id=user_vk_id).values('time_start')
+        
+        # if DEBUG: print(f" Сессии пользователя {user_vk_id} = {sessions}")
+        # for s in sessions:
+        #     if abs(self.__ready_to_book_list.index(s['time_start']) - self.__ready_to_book_list.index(start_test_time)) <= 4:
+        #         if DEBUG: print(f"Сессию {s.time_start}:{s.time_end} НЕЛЬЗЯ забронировать! (Пользователь: {user_vk_id})")
+        #         return False
+            
+        #     elif sessions.count() >= AMOUNT_OF_SESSIONS_IN_A_DAY_FOR_ONE_USER:
+        #         if DEBUG: print(f"Ограничение по кол-ву сессий для одного юзера в день. (Пользователь: {user_vk_id})")
+        #         return False 
+            
+        # if DEBUG: print(f"Сессию {start_test_time} МОЖНО забронировать! (Пользователь: {user_vk_id})")
+        # return True
     
     def is_possible_to_book_one_more(self, user_vk_id:int) -> bool:
         """ 

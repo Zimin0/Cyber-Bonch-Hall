@@ -39,16 +39,17 @@ def get_good_response(message="ok"):
     """ Возвращает положительный ответ ok, требуемый VK."""
     return HttpResponse(message, content_type="text/plain", status=200)
 
-def create_kb_book() -> str:
+def create_kb_book(can_book:bool) -> str:
     keyboard = VkKeyboard(one_time=True)
-    keyboard.add_button("Забронировать ПК", color=VkKeyboardColor.POSITIVE, payload=json.dumps({"button_text": "Забронировать ПК"}))
-    keyboard.add_line()
+    if can_book: 
+        keyboard.add_button("Забронировать ПК", color=VkKeyboardColor.POSITIVE, payload=json.dumps({"button_text": "Забронировать ПК"}))
+        keyboard.add_line()
     keyboard.add_button("Мои сессии", color=VkKeyboardColor.POSITIVE, payload=json.dumps({"button_text": "Мои сессии"}))
     keyboard.add_line()
     keyboard.add_button("Связаться с администратором", color=VkKeyboardColor.PRIMARY, payload=json.dumps({"button_text": "Связаться с администратором"}))
     return keyboard.get_keyboard()
 
-def create_choose_time() -> str:
+def create_choose_time() -> tuple:
     """ Генерирует клавиатуру с доступными для брони временами. """
 
     ######## Кэширование ########
@@ -60,7 +61,7 @@ def create_choose_time() -> str:
         if DEBUG: print(f"В базе данных появились новые сессии.")
         free_times = bot.find_free_time_to_book()
         cache.set('free_times', free_times, 60*60)
-        #cache.set('amount_of_sessions', amount_of_sessions, 60*60)
+        cache.set('amount_of_sessions', amount_of_sessions, 60*60)
     else:
         value = cache.get('free_times', default=None)
         if DEBUG: print(f"Беру free_times из кэша."); print(f'Значение по ключу free_times в кешэ: {value}')
@@ -81,7 +82,7 @@ def create_choose_time() -> str:
             keyboard.add_button(f"{all_times_list[t]}-{all_times_list[t+4]}", color=VkKeyboardColor.POSITIVE, payload=json.dumps({"button_text": all_times_list[t]}))
             count += 1
             if count % 3 == 0 and count != 0:
-                if t == (len(all_times_list)-5): # ??????????????????
+                if t == (len(all_times_list)-5): 
                     break
                 keyboard.add_line()
     if count != 0: 
@@ -108,16 +109,16 @@ def create_choose_pc(time):
     keyboard.add_button("Главное меню", color=VkKeyboardColor.NEGATIVE, payload=json.dumps({"button_text": "Главное меню"}))
     return keyboard.get_keyboard()
 
-def get_clear_keyboard():
+def get_clear_keyboard() -> VkKeyboard:
     """ Возвращает пустую клавиатуру. Используется для удаления клавиатуры. """
     keyboard = VkKeyboard(one_time=True)
     return keyboard.get_empty_keyboard()
 
-def get_message_text(data):
+def get_message_text(data) -> str:
     """Получение текста сообщения."""
     return data['object']['message']['text']
 
-def get_button_text(data):
+def get_button_text(data) -> str:
     """Получение текста из payload кнопки."""
     return data['object']['message']['payload'].replace('"','')
 
@@ -140,7 +141,7 @@ def create_keyboard_my_session() -> VkKeyboard:
     keyboard.add_button("Главное меню", color=VkKeyboardColor.PRIMARY, payload=json.dumps({"button_text": "Главное меню"}))
     return keyboard.get_keyboard()
 
-def handle_computer_booking(data, user_vk_id:int, butt_text:str) -> None:
+def handle_computer_booking(data, user_vk_id:int, can_book:bool) -> None:
     """ Срабатывает, когда пользователь нажимает на кнопку с номером компьютера."""
     payload = get_button_text(data)
     start_time = payload.split('+')[1]
@@ -149,7 +150,7 @@ def handle_computer_booking(data, user_vk_id:int, butt_text:str) -> None:
     computer = Computer.objects.get(number=pc_number)
     session = Session.objects.create(time_start=start_time, time_end=end_time, computer=computer, vk_id=user_vk_id)
     bot.upload_session_to_timeperiods(session)
-    send_message(user_vk_id, f'Время забронировано! Твой сеанс: {start_time}-{end_time}.\n Компьютер №{pc_number}. \nДанные для входа в систему компьютера: \n<login> \n<password>', create_kb_book())
+    send_message(user_vk_id, f'Время забронировано! Твой сеанс: {start_time}-{end_time}.\n Компьютер №{pc_number}. \nДанные для входа в систему компьютера: \n<login> \n<password>', create_kb_book(can_book))
 
 
 from booking.models import Session
@@ -163,6 +164,7 @@ def index(request):
     if data['type'] == 'confirmation': 
         return confirm(request)
     user_vk_id = get_vk_id(data) # получение VK ID пользователя
+    can_book = bot.is_possible_to_book(user_vk_id)
     if DEBUG:
         print("--------------------КЭШ--------------------")
         print(f"amount_of_sessions = {cache.get('amount_of_sessions')}")
@@ -172,7 +174,7 @@ def index(request):
         if not(DEBUG):
             if bot.is_message_was_writen(data):
                 if DEBUG: print("Введено сообщение с клавиатуры.")
-                send_message(user_vk_id, f'Используй кнопки, пожалуйста!', create_kb_book())
+                send_message(user_vk_id, f'Используй кнопки, пожалуйста!', create_kb_book(can_book))
                 return get_good_response()
         butt_text = get_message_text(data)
         if DEBUG:
@@ -189,32 +191,32 @@ def index(request):
                 text = "К сожалению, мест уже нет. Приходи завтра!"
             send_message(user_vk_id, text, keyboard) 
         if butt_text == "Главное меню":
-            send_message(user_vk_id, "Главное меню", create_kb_book())
+            send_message(user_vk_id, "Главное меню", create_kb_book(can_book))
         if butt_text == "Отменить бронь":
             Session.objects.get(vk_id=user_vk_id).delete(bot=bot)
-            send_message(user_vk_id, "Бронь отменена! \nТеперь ты снова можешь забронировать сессию!", create_kb_book())
+            send_message(user_vk_id, "Бронь отменена! \nТеперь ты снова можешь забронировать сессию!", create_kb_book(can_book))
         if butt_text == "Мои сессии": 
             sesion_data = bot.get_my_session(user_vk_id)
             text = sesion_data['text']
             status = sesion_data['status']
             if not(status): # Если у пользователя нет забронированных сессий
-                send_message(user_vk_id, text, create_kb_book())
+                send_message(user_vk_id, text, create_kb_book(can_book))
             else: 
                 send_message(user_vk_id, text, create_keyboard_my_session())
         if butt_text == "Связаться с администратором":
-            send_message(user_vk_id, phrase2, create_kb_book())
+            send_message(user_vk_id, phrase2, create_kb_book(can_book))
 
         if butt_text == "Начать":
-           send_message(user_vk_id, phrase1, create_kb_book())
+           send_message(user_vk_id, phrase1, create_kb_book(can_book))
         
         start_time = butt_text.split('-')[0]
         if start_time in bot.get_ready_to_book_list():
-            if bot.is_possible_to_book(user_vk_id, start_time):
+            if bot.is_possible_to_book(user_vk_id):
                 send_message(user_vk_id, f'Выбери компьютер для бронирования:', create_choose_pc(start_time))
             else:
-                send_message(user_vk_id, f'Извини, но нельзя забронировать: \n 1) Более 3 сессий в день для одного пользователя. \n 2) 2 параллельные сессии на разных компьютерах.', create_choose_time()[0])
+                send_message(user_vk_id, f'Извини, но у тебя уже есть сессия. Ждем тебя в XX:XX!', create_choose_time()[0])
         if 'ПК №' in butt_text:
-            handle_computer_booking(data, user_vk_id, butt_text)
+            handle_computer_booking(data, user_vk_id, can_book)
         return get_good_response()
 
 @csrf_exempt
