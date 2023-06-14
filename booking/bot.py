@@ -99,7 +99,10 @@ class Bot():
         return 'payload' not in data['object']['message']
 
     def is_possible_to_book(self, user_vk_id:int) -> bool:
-        """ Проверяет, можно ли забронировать эту сессию юзеру - можно бронировать только одну сессию вперед. \nПотом бронь открывается только после конца сессии. """
+        """ 
+        Проверяет, можно ли забронировать эту сессию юзеру - \n
+        можно бронировать только одну сессию вперед. \n
+        Потом бронь открывается только после конца сессии. """
 
         sessions = Session.objects.filter(vk_id=user_vk_id) 
         now_time = TimePeriod.get_now_time_str()
@@ -126,12 +129,16 @@ class Bot():
         # if DEBUG: print(f"Сессию {start_test_time} МОЖНО забронировать! (Пользователь: {user_vk_id})")
         # return True
     
-    def is_possible_to_book_one_more(self, user_vk_id:int) -> bool:
+    def is_pc_available(self, time:str, pc:Computer) -> bool:
         """ 
-        Функция возвращает False, если пользователь уже забронировал сессию сегодня и его забронированная сессия еще не подошла к концу. 
-        True в обратном случае.
+        Проверяет, можно ли забронировать данный компьютер на данное время.
         """
-        pass
+        # проверяем левую границу временного промежутка
+        if TimePeriod.objects.filter(time=time, computer=pc).values('status')['status'] == 'F':
+            # проверяем правую границу временного промежутка
+            if TimePeriod.objects.filter(time=self.get_right_edge(time), computer=pc).values('status')['status'] == 'F':
+                return True
+        return False
 
     def get_my_session(self, user_vk_id:int) -> dict:
         """ Возвращает словарь с инфо о забронированной сессии юзера и наличии забронированной сессии. \n {'text':word_session, "status": status} """
