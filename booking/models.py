@@ -37,7 +37,7 @@ class Session(models.Model):
     #                 time_period.save()
     #     super(Session, self).save(*args, **kwargs)
 
-    def create(self, bot, **obj_data):
+    def create(self, **obj_data):
         cache.set('amount_of_sessions', Session.objects.count(), 60*60) # кэшириуется новое кол-во сессий 
         start_index = bot.get_ready_to_book_list().index(self.time_start)
         for i in range(6):
