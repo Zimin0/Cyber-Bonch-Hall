@@ -162,7 +162,7 @@ def handle_computer_booking(data, user_vk_id:int, can_book:bool) -> None:
     if bot.is_pc_available(start_time, computer):
         session = Session.objects.create(time_start=start_time, time_end=end_time, computer=computer, vk_id=user_vk_id)
         bot.upload_session_to_timeperiods(session)
-        send_message(user_vk_id, f'Время забронировано! Твой сеанс: {start_time}-{end_time}.\n Компьютер №{pc_number}. \nДанные для входа в систему компьютера: \n<login> \n<password>', create_kb_book(can_book))
+        send_message(user_vk_id, f'Время забронировано! Твой сеанс: {start_time}-{end_time}.\n Компьютер №{pc_number}. \nДанные для входа в систему компьютера: \n<login> \n<password>', create_kb_book(can_book=False))
     else:
         send_message(user_vk_id, f'Упс... Этот сеанс уже забронировал кто-то другой', create_kb_book(can_book))
    
@@ -251,7 +251,7 @@ def confirm(request):
     if DEBUG: print("Удачная проверка токена!")
     return get_good_response(CONFIRMATION_TOKEN)
 
-#@login_required(redirect_field_name='admin:index')
+@login_required
 def info(request):
     """ Страница для просмотра информации о забронированных компах. """
     if not(request.user.is_authenticated):
@@ -259,7 +259,6 @@ def info(request):
     computers = Computer.objects.all().iterator()
     context = {'computers':computers}
     return render(request, "booking/index.html", context)
-
 
 @login_required
 def free_sessions(request):
