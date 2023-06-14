@@ -60,7 +60,7 @@ def create_choose_time() -> str:
         if DEBUG: print(f"В базе данных появились новые сессии.")
         free_times = bot.find_free_time_to_book()
         cache.set('free_times', free_times, 60*60)
-        cache.set('amount_of_sessions', amount_of_sessions, 60*60)
+        #cache.set('amount_of_sessions', amount_of_sessions, 60*60)
     else:
         value = cache.get('free_times', default=None)
         if DEBUG: print(f"Беру free_times из кэша."); print(f'Значение по ключу free_times в кешэ: {value}')
@@ -163,6 +163,11 @@ def index(request):
     if data['type'] == 'confirmation': 
         return confirm(request)
     user_vk_id = get_vk_id(data) # получение VK ID пользователя
+    if DEBUG:
+        print("--------------------КЭШ--------------------")
+        print(f"amount_of_sessions = {cache.get('amount_of_sessions')}")
+        print(f"free_times = {cache.get('free_times')}")
+        print("-------------------------------------------")
     if data['type'] == 'message_new':
         if not(DEBUG):
             if bot.is_message_was_writen(data):
@@ -198,7 +203,7 @@ def index(request):
                 send_message(user_vk_id, text, create_keyboard_my_session())
         if butt_text == "Связаться с администратором":
             send_message(user_vk_id, phrase2, create_kb_book())
-            
+
         if butt_text == "Начать":
            send_message(user_vk_id, phrase1, create_kb_book())
         
