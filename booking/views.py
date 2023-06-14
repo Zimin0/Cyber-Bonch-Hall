@@ -184,7 +184,7 @@ def index(request):
         print(f"amount_of_sessions = {cache.get('amount_of_sessions')}")
         print(f"free_times = {cache.get('free_times')}")
         print("-------------------------------------------")
-        
+
     if data['type'] == 'message_new':
         if not(DEBUG):
             if bot.is_message_was_writen(data):
@@ -193,7 +193,7 @@ def index(request):
                 return get_good_response()
         butt_text = get_message_text(data)
         if DEBUG:
-            print("Новое сооющение с кнопки ", f"= '{butt_text}'")
+            print("Новое сообщение с кнопки ", f"= '{butt_text}'")
             print('-------------------------------------------------------------------')
             print(data)
             print('-------------------------------------------------------------------')
