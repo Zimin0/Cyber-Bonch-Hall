@@ -71,6 +71,8 @@ class Bot():
     
     def get_right_edge_yellow(self, time:str) -> str:
         """ Получает 16:45, возвращает 18:00 """
+        if time == '21:45': # !!!!!!!!!!!!!!!!!!!!!!!!!!!УЬРАТЬУБРАТЬУБРАТЬУБРАТЬ!!!!!!!!!!!!!!!!!!!!!!!!!!11
+            return '22:45'
         return self.__ready_to_book_list[(self.__ready_to_book_list.index(time) + 5)]
     
     def get_computer(self, time:str):
@@ -133,7 +135,7 @@ class Bot():
     def get_my_session(self, user_vk_id:int) -> dict:
         """ Возвращает словарь с инфо о забронированной сессии юзера и наличии забронированной сессии. \n {'text':word_session, "status": status} """
         if Session.objects.filter(vk_id=user_vk_id).exists():
-            sess = Session.objects.filter(vk_id=user_vk_id).first() ### Потом поменять или добавить проверку на сессий > 1
+            sess = Session.objects.filter(vk_id=user_vk_id).last() ### Потом поменять или добавить проверку на сессий > 1
             word_session = f"Сессия: \n С {sess.time_start} до {sess.time_end}. \n Компьютер №{sess.computer.number}."
             status = True
         else:
