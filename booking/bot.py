@@ -101,8 +101,8 @@ class Bot():
     def is_possible_to_book(self, user_vk_id:int) -> bool:
         """ Проверяет, можно ли забронировать эту сессию юзеру - можно бронировать только одну сессию вперед. \nПотом бронь открывается только после конца сессии. """
 
-        sessions = Session.objects.filter(vk_id=user_vk_id) # 
-        now_time = '20:00' #TimePeriod.get_now_time_str()
+        sessions = Session.objects.filter(vk_id=user_vk_id) 
+        now_time = TimePeriod.get_now_time_str()
 
         if sessions.exists():
             if not(TimePeriod.compare_two_str_time(now_time, sessions.last().time_end)): #####!!!!!!!!1 переписать
