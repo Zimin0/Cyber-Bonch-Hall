@@ -27,13 +27,8 @@ class Session(models.Model):
         super(Session, self).delete()
 
     def save(self, *args, **kwargs):
+        cache.set('amount_of_sessions', Session.objects.count(), 60*60)
         super(Session, self).save(*args, **kwargs)
-
-
-    
-    # def __save__(self, *args, **kwargs):
-    #     cache.set('amount_of_sessions', Session.objects.count(), 60*60)
-    #     super(Session, self).save(*args, **kwargs)
 
 
 class TimePeriod(models.Model):
@@ -52,7 +47,7 @@ class TimePeriod(models.Model):
         return str(self.time)
     
     @staticmethod
-    def convert_to_second(hours=0, minutes=0): 
+    def convert_to_second(hours=0, minutes=0) -> int: 
         """Переводит из часов и минут в секунды с начала дня (с 00:00)"""
         return (hours * 60 + minutes) * 60
 

@@ -71,6 +71,8 @@ class Bot():
     
     def get_right_edge_yellow(self, time:str) -> str:
         """ Получает 16:45, возвращает 18:00 """
+        if time == '21:45': # !!!!!!!!!!!!!!!!!!!!!!!!!!!УЬРАТЬУБРАТЬУБРАТЬУБРАТЬ!!!!!!!!!!!!!!!!!!!!!!!!!!11
+            return '22:45'
         return self.__ready_to_book_list[(self.__ready_to_book_list.index(time) + 5)]
     
     def get_computer(self, time:str):
@@ -96,25 +98,33 @@ class Bot():
         """ Проверяет, было ли сообщение напечатано юзером или отправлено через кнопку."""
         return 'payload' not in data['object']['message']
 
-    def is_possible_to_book(self, user_vk_id:int, start_test_time:str) -> bool:
+    def is_possible_to_book(self, user_vk_id:int) -> bool:
+        """ Проверяет, можно ли забронировать эту сессию юзеру - можно бронировать только одну сессию вперед. \nПотом бронь открывается только после конца сессии. """
 
-        # !!!!! добавить отчет об отказе брони
+        sessions = Session.objects.filter(vk_id=user_vk_id) 
+        now_time = TimePeriod.get_now_time_str()
 
-        """ Проверяет, можно ли забронировать эту сессию юзеру(подряд 2 нельзя). И соседние сессии тоже бранировать нельзя."""
-        sessions = Session.objects.filter(vk_id=user_vk_id).values('time_start')
-        
-        if DEBUG: print(f" Сессии пользователя {user_vk_id} = {sessions}")
-        for s in sessions:
-            if abs(self.__ready_to_book_list.index(s['time_start']) - self.__ready_to_book_list.index(start_test_time)) <= 4:
-                if DEBUG: print(f"Сессию {s.time_start}:{s.time_end} НЕЛЬЗЯ забронировать! (Пользователь: {user_vk_id})")
+        if sessions.exists():
+            if not(TimePeriod.compare_two_str_time(now_time, sessions.last().time_end)): #####!!!!!!!!1 переписать
                 return False
-            
-            elif sessions.count() >= AMOUNT_OF_SESSIONS_IN_A_DAY_FOR_ONE_USER:
-                if DEBUG: print(f"Ограничение по кол-ву сессий для одного юзера в день. (Пользователь: {user_vk_id})")
-                return False 
-            
-        if DEBUG: print(f"Сессию {start_test_time} МОЖНО забронировать! (Пользователь: {user_vk_id})")
+            sessions.last().delete(self)
         return True
+
+        # """ Проверяет, можно ли забронировать эту сессию юзеру(подряд 2 нельзя). И соседние сессии тоже бранировать нельзя."""
+        # sessions = Session.objects.filter(vk_id=user_vk_id).values('time_start')
+        
+        # if DEBUG: print(f" Сессии пользователя {user_vk_id} = {sessions}")
+        # for s in sessions:
+        #     if abs(self.__ready_to_book_list.index(s['time_start']) - self.__ready_to_book_list.index(start_test_time)) <= 4:
+        #         if DEBUG: print(f"Сессию {s.time_start}:{s.time_end} НЕЛЬЗЯ забронировать! (Пользователь: {user_vk_id})")
+        #         return False
+            
+        #     elif sessions.count() >= AMOUNT_OF_SESSIONS_IN_A_DAY_FOR_ONE_USER:
+        #         if DEBUG: print(f"Ограничение по кол-ву сессий для одного юзера в день. (Пользователь: {user_vk_id})")
+        #         return False 
+            
+        # if DEBUG: print(f"Сессию {start_test_time} МОЖНО забронировать! (Пользователь: {user_vk_id})")
+        # return True
     
     def is_possible_to_book_one_more(self, user_vk_id:int) -> bool:
         """ 
@@ -126,7 +136,7 @@ class Bot():
     def get_my_session(self, user_vk_id:int) -> dict:
         """ Возвращает словарь с инфо о забронированной сессии юзера и наличии забронированной сессии. \n {'text':word_session, "status": status} """
         if Session.objects.filter(vk_id=user_vk_id).exists():
-            sess = Session.objects.filter(vk_id=user_vk_id).first() ### Потом поменять или добавить проверку на сессий > 1
+            sess = Session.objects.filter(vk_id=user_vk_id).last() ### Потом поменять или добавить проверку на сессий > 1
             word_session = f"Сессия: \n С {sess.time_start} до {sess.time_end}. \n Компьютер №{sess.computer.number}."
             status = True
         else:
