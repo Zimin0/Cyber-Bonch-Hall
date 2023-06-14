@@ -198,11 +198,14 @@ def index(request):
                 send_message(user_vk_id, text, create_keyboard_my_session())
         if butt_text == "Связаться с администратором":
             send_message(user_vk_id, phrase2, create_kb_book())
+            
         if butt_text == "Начать":
            send_message(user_vk_id, phrase1, create_kb_book())
-        if butt_text.split('-')[0] in bot.get_ready_to_book_list():
-            if bot.is_possible_to_book(user_vk_id, butt_text.split('-')[0]):
-                send_message(user_vk_id, f'Выбери компьютер для бронирования:', create_choose_pc(butt_text.split('-')[0]))
+        
+        start_time = butt_text.split('-')[0]
+        if start_time in bot.get_ready_to_book_list():
+            if bot.is_possible_to_book(user_vk_id, start_time):
+                send_message(user_vk_id, f'Выбери компьютер для бронирования:', create_choose_pc(start_time))
             else:
                 send_message(user_vk_id, f'Извини, но нельзя забронировать: \n 1) Более 3 сессий в день для одного пользователя. \n 2) 2 параллельные сессии на разных компьютерах.', create_choose_time()[0])
         if 'ПК №' in butt_text:
