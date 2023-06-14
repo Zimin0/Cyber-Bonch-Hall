@@ -105,7 +105,7 @@ class Bot():
         Потом бронь открывается только после конца сессии. """
 
         sessions = Session.objects.filter(vk_id=user_vk_id) 
-        now_time = TimePeriod.get_now_time_str()
+        now_time = '19:00' #TimePeriod.get_now_time_str()
 
         if sessions.exists():
             if not(TimePeriod.compare_two_str_time(now_time, sessions.last().time_end)): #####!!!!!!!!1 переписать
