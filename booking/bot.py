@@ -107,7 +107,7 @@ class Bot():
         if sessions.exists():
             if not(TimePeriod.compare_two_str_time(now_time, sessions.last().time_end)): #####!!!!!!!!1 переписать
                 return False
-            sessions.last().delete()
+            sessions.last().delete(self)
         return True
 
         # """ Проверяет, можно ли забронировать эту сессию юзеру(подряд 2 нельзя). И соседние сессии тоже бранировать нельзя."""
