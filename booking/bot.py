@@ -161,7 +161,7 @@ class Bot():
                 time_period.status = "B" if i < 5 else "TB"
                 time_period.save()
 
-    def is_session_in_progress(self, user_vk_id):
+    def is_session_in_progress(self, user_vk_id:int) -> bool:
         """ 
         True - если сессия пользователя идет сейчас. \n 
         False в обратном.

@@ -43,8 +43,12 @@ def get_good_response(message="ok") -> HttpResponse:
     """ Возвращает положительный ответ ok, требуемый VK."""
     return HttpResponse(message, content_type="text/plain", status=200)
 
-def create_kb_book(can_book:bool) -> VkKeyboard:
-    """ Возвращает клавиатуру с главным меню.\n can_book - может ли пользователь бронировать новые сессии."""
+def create_kb_book(can_book:bool, is_session_in_progress:bool) -> VkKeyboard:
+    """ 
+    Возвращает клавиатуру с главным меню.\n 
+    can_book - может ли пользователь бронировать новые сессии. \n
+    is_session_in_progиress - идет ли сейчас сессия юзера. \n
+    """
     keyboard = VkKeyboard(one_time=True)
     if can_book: 
         keyboard.add_button("Забронировать ПК", color=VkKeyboardColor.POSITIVE, payload=json.dumps({"button_text": "Забронировать ПК"}))
@@ -152,7 +156,7 @@ def create_keyboard_my_session() -> VkKeyboard:
     keyboard.add_button("Главное меню", color=VkKeyboardColor.PRIMARY, payload=json.dumps({"button_text": "Главное меню"}))
     return keyboard.get_keyboard()
 
-def handle_computer_booking(data, user_vk_id:int, can_book:bool) -> None:
+def handle_computer_booking(data, user_vk_id:int, can_book:bool, is_session_in_progress:bool) -> None:
     """ Срабатывает, когда пользователь нажимает на кнопку с номером компьютера."""
     payload = get_button_text(data)
     start_time = payload.split('+')[1]
@@ -162,9 +166,9 @@ def handle_computer_booking(data, user_vk_id:int, can_book:bool) -> None:
     if bot.is_pc_available(start_time, computer):
         session = Session.objects.create(time_start=start_time, time_end=end_time, computer=computer, vk_id=user_vk_id)
         bot.upload_session_to_timeperiods(session)
-        send_message(user_vk_id, f'Время забронировано! Твой сеанс: {start_time}-{end_time}.\n Компьютер №{pc_number}. \nДанные для входа в систему компьютера: \n<login> \n<password>', create_kb_book(can_book=False))
+        send_message(user_vk_id, f'Время забронировано! Твой сеанс: {start_time}-{end_time}.\n Компьютер №{pc_number}. \nДанные для входа в систему компьютера: \n<login> \n<password>', create_kb_book(can_book=False, is_session_in_progress))
     else:
-        send_message(user_vk_id, f'Упс... Этот сеанс уже забронировал кто-то другой', create_kb_book(can_book))
+        send_message(user_vk_id, f'Упс... Этот сеанс уже забронировал кто-то другой', create_kb_book(can_book, is_session_in_progress))
    
 @csrf_exempt
 def index(request):
@@ -190,7 +194,7 @@ def index(request):
         if not(DEBUG):
             if bot.is_message_was_writen(data):
                 if DEBUG: print("Введено сообщение с клавиатуры.")
-                send_message(user_vk_id, f'Используй кнопки, пожалуйста!', create_kb_book(can_book))
+                send_message(user_vk_id, f'Используй кнопки, пожалуйста!', create_kb_book(can_book, is_session_in_progress))
                 return get_good_response()
         butt_text = get_message_text(data)
         if DEBUG:
@@ -208,27 +212,27 @@ def index(request):
             send_message(user_vk_id, text, keyboard) 
         
         if butt_text == "Главное меню":
-            send_message(user_vk_id, "Главное меню", create_kb_book(can_book))
+            send_message(user_vk_id, "Главное меню", create_kb_book(can_book, is_session_in_progress))
         
         if butt_text == "Отменить бронь":
             Session.objects.get(vk_id=user_vk_id).delete(bot=bot)
             can_book = True
-            send_message(user_vk_id, "Бронь отменена! \nТеперь ты снова можешь забронировать сессию!", create_kb_book(can_book))
+            send_message(user_vk_id, "Бронь отменена! \nТеперь ты снова можешь забронировать сессию!", create_kb_book(can_book, is_session_in_progress))
         
         if butt_text == "Мои сессии": 
             sesion_data = bot.get_my_session(user_vk_id)
             text = sesion_data['text']
             status = sesion_data['status']
             if not(status): # Если у пользователя нет забронированных сессий
-                send_message(user_vk_id, text, create_kb_book(can_book))
+                send_message(user_vk_id, text, create_kb_book(can_book, is_session_in_progress))
             else: 
                 send_message(user_vk_id, text, create_keyboard_my_session())
 
         if butt_text == "Связаться с администратором":
-            send_message(user_vk_id, phrase2, create_kb_book(can_book))
+            send_message(user_vk_id, phrase2, create_kb_book(can_book, is_session_in_progress))
 
         if butt_text == "Начать":
-           send_message(user_vk_id, phrase1, create_kb_book(can_book))
+           send_message(user_vk_id, phrase1, create_kb_book(can_book, is_session_in_progress))
         
         start_time = butt_text.split('-')[0]
         if start_time in bot.get_ready_to_book_list():
@@ -237,7 +241,7 @@ def index(request):
             else:
                 send_message(user_vk_id, f'Извини, но у тебя уже есть сессия. Ждем тебя в XX:XX!', create_choose_time()[0])
         if 'ПК №' in butt_text:
-            handle_computer_booking(data, user_vk_id, can_book)
+            handle_computer_booking(data, user_vk_id, can_book, is_session_in_progress)
         return get_good_response()
 
 @csrf_exempt
