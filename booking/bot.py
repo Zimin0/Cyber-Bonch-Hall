@@ -122,7 +122,8 @@ class Bot():
 
         sessions = Session.objects.filter(vk_id=user_vk_id) 
         now_time = TimePeriod.get_now_time_str()
-
+        if DEBUG: now_time = '20:00'
+        
         if sessions.exists():
             if not(TimePeriod.compare_two_str_time(now_time, sessions.last().time_end)): #####!!!!!!!!1 переписать
                 return False
