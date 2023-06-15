@@ -202,23 +202,23 @@ class Bot():
 
         ############# START #############
         text = f'{SESSION_START_TEXT}\n Напомню: \n{session.computer}\n{start_time}-{end_time}\n Удачной игры!'
-        Notification.objects.create(start_time, text, user_vk_id, 'RTC', 'W', session)
+        Notification.objects.create(time=start_time, text=text, user_vk_id=user_vk_id, type='RTC', status='W', session=session)
         #################################
         ##### 15 MIN BEFORE THE END #####
         text = f'У тебя осталось 15 минут! Конец в {end_time}!'
-        Notification.objects.create(before_15_end_time, text, user_vk_id, 'EW', 'W', session)
+        Notification.objects.create(time=before_15_end_time, text=text, user_vk_id=user_vk_id, type='EW', status='W', session=session)
         #################################
         ##### 10 MIN BEFORE THE END #####
         text = f'У тебя осталось 10 минут! Конец в {end_time}!'
-        Notification.objects.create(before_10_end_time, text, user_vk_id, 'EW', 'W', session)
+        Notification.objects.create(time=before_10_end_time, text=text, user_vk_id=user_vk_id, type='EW', status='W', session=session)
         #################################
         ##### 5 MIN BEFORE THE END ######
         text = f'У тебя осталось 5 минут! Конец в {end_time}!'
-        Notification.objects.create(before_5_end_time, text, user_vk_id, 'EW', 'W', session)
+        Notification.objects.create(time=before_5_end_time, text=text, user_vk_id=user_vk_id, type='EW', status='W', session=session)
         #################################
         ##### 0 MIN BEFORE THE END ######
         text = 'Сессия окончена! Спасибо за игру! <комментарий, связанный с игрой>'
-        Notification.objects.create(end_time, text, user_vk_id, 'EW', 'W', session)
+        Notification.objects.create(time=end_time, text=text, user_vk_id=user_vk_id, type='EW', status='W', session=session)
         #################################
 
         

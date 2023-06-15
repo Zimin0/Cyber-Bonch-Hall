@@ -26,6 +26,8 @@ class Notification(models.Model):
                 Уже должно быть оптравлено, но пока еще нет.
             S:
                 Оптравлено
+        session:
+            Session object
     """
     TYPES = (
         ('NS', 'Без типа'),
