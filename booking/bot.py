@@ -172,7 +172,7 @@ class Bot():
                 return True
         return False
     
-    def get_notific_times(self, time:str) -> dict:
+    def __get_notific_times(self, time:str) -> dict:
         """ Получает time в формате 16:45 - возвращает словарь с данными об уведомлениях. """
         data = {}
 
@@ -184,7 +184,7 @@ class Bot():
 
         return data
 
-    def create_session_notions(self, user_vk_id:int, times:dict, session:Session) -> None:
+    def create_session_notions(self, user_vk_id:int, session:Session) -> None:
         """ 
         Создает уведомления для сессии:
             * О начале сессии
@@ -193,6 +193,7 @@ class Bot():
             * За 5 минут до конца
             * О конце сессии
         """
+        times = self.__get_notific_times(session.time_start)
         start_time = times['start_time'] 
         before_15_end_time = times['before_15_end_time']
         before_10_end_time = times['before_10_end_time']
