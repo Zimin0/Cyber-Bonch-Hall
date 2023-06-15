@@ -8,7 +8,13 @@ from django.core.cache import cache
 
 
 class Session(models.Model):
-    """Сессия от X до Y"""
+    """
+    Сессия от X до Y, где X и Y - времена в формате |15:00|.
+    * time_start
+    * time_end
+    * computer---related_name="sessions"
+    * vk_id
+    """
     time_start = models.CharField(verbose_name="Время начала сеанса", blank=False, help_text="Формат: XX:XX", max_length=5)
     time_end = models.CharField(verbose_name="Время окончания сеанса", blank=False, help_text="Формат: XX:XX", max_length=5)
     computer = models.ForeignKey(Computer, verbose_name="Компьютер", on_delete=models.CASCADE, related_name="sessions")
@@ -50,7 +56,12 @@ class Session(models.Model):
 
 
 class TimePeriod(models.Model):
-    """Временные промежутки по N минут"""
+    """
+    Временные промежутки по N минут
+    * time
+    * status
+    * computer---related_name='time_periods'
+    """
     STATUS = (
         ('B', "Забронировано"),
         ('F', 'Свободно'),

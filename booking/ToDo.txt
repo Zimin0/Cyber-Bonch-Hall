@@ -56,6 +56,8 @@
 16. 21:45-22:45 -  return self.__ready_to_book_list[(self.__ready_to_book_list.index(time) + 5)]
 IndexError: list index out of range
 17. В комментариях к моделям прописать поля, чтобы каждый раз не возвращаться к файлу models
+
+
 Прикольные фитчи:
 1. Возможность выключить компьютер, отобразится черным
 2. 

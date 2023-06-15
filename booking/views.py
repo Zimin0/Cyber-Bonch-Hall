@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 
 from config.settings import DEBUG
-from config.config import TOKEN, CONFIRMATION_TOKEN, SECRET_KEY
+from config.config import TOKEN, CONFIRMATION_TOKEN, SECRET_KEY, ADMIN_VK_LINK
 from booking.models import TimePeriod, Computer
 from booking.bot import Bot
 from booking.models import Session
@@ -19,7 +19,7 @@ from booking.models import Session
 bot = Bot()
 
 phrase1 = "Приветствую! Я бот, через которого можно забронировать место в киберспортивном компьютерном клубе по адресу СПб, Дальневосточный пр-кт, 71. Вход рядом со входом в общежитие."
-phrase2 = "https://vk.com/id756821329 \n Администратор работает с 16:00 до 20:00"
+phrase2 = f"{ADMIN_VK_LINK} \n Администратор работает с 16:00 до 20:00"
 
 def _get_random_id() -> int:
     """ Требуется для отправки сообщений vk. """
@@ -52,6 +52,9 @@ def create_kb_book(can_book:bool, is_session_in_progress:bool) -> VkKeyboard:
     keyboard = VkKeyboard(one_time=True)
     if can_book: 
         keyboard.add_button("Забронировать ПК", color=VkKeyboardColor.POSITIVE, payload=json.dumps({"button_text": "Забронировать ПК"}))
+        keyboard.add_line()
+    if is_session_in_progress:
+        keyboard.add_button("Продлить сеанс", color=VkKeyboardColor.POSITIVE, payload=json.dumps({"button_text": "Продлить сеанс"}))
         keyboard.add_line()
     keyboard.add_button("Мои сессии", color=VkKeyboardColor.POSITIVE, payload=json.dumps({"button_text": "Мои сессии"}))
     keyboard.add_line()
@@ -182,7 +185,7 @@ def index(request):
     
     user_vk_id = get_vk_id(data) # получение VK ID пользователя
     can_book = bot.is_possible_to_book(user_vk_id) # Может ли пользователь бронировать сессии
-    is_session_in_progress = bot.is_session_in_progress(user_vk_id)
+    is_session_in_progress = bot.is_session_in_progress(user_vk_id) # идет ли сейчас сессия у пользователя
 
     if DEBUG:
         print("--------------------КЭШ--------------------")
@@ -191,12 +194,15 @@ def index(request):
         print("-------------------------------------------")
 
     if data['type'] == 'message_new':
+
         if not(DEBUG):
             if bot.is_message_was_writen(data):
                 if DEBUG: print("Введено сообщение с клавиатуры.")
                 send_message(user_vk_id, f'Используй кнопки, пожалуйста!', create_kb_book(can_book, is_session_in_progress))
                 return get_good_response()
+            
         butt_text = get_message_text(data)
+
         if DEBUG:
             print("Новое сообщение с кнопки ", f"= '{butt_text}'")
             print('-------------------------------------------------------------------')
@@ -213,6 +219,12 @@ def index(request):
         
         if butt_text == "Главное меню":
             send_message(user_vk_id, "Главное меню", create_kb_book(can_book, is_session_in_progress))
+        
+        if butt_text == 'Продлить сеанс':
+            pc = Session.objects.filter(vk_id=user_vk_id).values('computer').last()['computer']
+            if Session.objects.filter(vk_id=user_vk_id).exists():
+                send_message(ADMIN_VK_LINK, "Шуровай помогать к {pc}!")
+                send_message(user_vk_id, "К тебе подойдет администратор. А пока держи мид.", create_kb_book(can_book, is_session_in_progress))
         
         if butt_text == "Отменить бронь":
             Session.objects.get(vk_id=user_vk_id).delete(bot=bot)
