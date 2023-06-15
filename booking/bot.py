@@ -160,3 +160,15 @@ class Bot():
             if time_period is not None:
                 time_period.status = "B" if i < 5 else "TB"
                 time_period.save()
+
+    def is_session_in_progress(self, user_vk_id):
+        """ 
+        True - если сессия пользователя идет сейчас. \n 
+        False в обратном.
+        """
+        now_time = TimePeriod.get_now_time_str()
+        if Session.objects.filter(vk_id=user_vk_id).exists():
+            sess = Session.objects.filter(vk_id=user_vk_id).last()
+            if TimePeriod.compare_two_str_time(sess.time_end , now_time) and TimePeriod.compare_two_str_time(now_time, sess.time_start):
+                return True
+        return False

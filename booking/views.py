@@ -160,7 +160,7 @@ def handle_computer_booking(data, user_vk_id:int, can_book:bool) -> None:
     end_time = bot.get_right_edge(start_time)
     computer = Computer.objects.get(number=pc_number)
     if bot.is_pc_available(start_time, computer):
-        session = Session.objects.create( time_start=start_time, time_end=end_time, computer=computer, vk_id=user_vk_id)
+        session = Session.objects.create(time_start=start_time, time_end=end_time, computer=computer, vk_id=user_vk_id)
         bot.upload_session_to_timeperiods(session)
         send_message(user_vk_id, f'Время забронировано! Твой сеанс: {start_time}-{end_time}.\n Компьютер №{pc_number}. \nДанные для входа в систему компьютера: \n<login> \n<password>', create_kb_book(can_book=False))
     else:
@@ -178,6 +178,7 @@ def index(request):
     
     user_vk_id = get_vk_id(data) # получение VK ID пользователя
     can_book = bot.is_possible_to_book(user_vk_id) # Может ли пользователь бронировать сессии
+    is_session_in_progress = bot.is_session_in_progress(user_vk_id)
 
     if DEBUG:
         print("--------------------КЭШ--------------------")
