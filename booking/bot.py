@@ -156,10 +156,7 @@ class Bot():
         """ Обновляет TimePeriod`ы в соответствии с созданной сессией. """
         start_index = self.__ready_to_book_list.index(session.time_start)
         for i in range(6):
-            try:
-                time_period = TimePeriod.objects.filter(time=self.__ready_to_book_list[start_index + i], computer=session.computer).first()
-            except IndexError:
-                continue
+            time_period = TimePeriod.objects.filter(time=self.__ready_to_book_list[start_index + i], computer=session.computer).first()
             if time_period is not None:
                 time_period.status = "B" if i < 5 else "TB"
                 time_period.save()
