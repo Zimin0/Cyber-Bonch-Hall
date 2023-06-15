@@ -9,7 +9,7 @@ def send_notification():
     from booking.models import TimePeriod
 
     notifs = Notification.objects.exclude(status="S")
-    
+
     print(f"Нашел {notifs.count()} неотправленных уведомдений.")
     for notif in notifs:
         if notif.status in ('W', 'NTS') : # Уведомление ожидает отправки
@@ -22,7 +22,7 @@ def send_notification():
 
         ## Добавить логирование
 
-
+print("Выполняю скрипт cron_send_notice.py")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 send_notification()
