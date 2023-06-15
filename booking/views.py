@@ -223,7 +223,7 @@ def index(request):
         if butt_text == 'Продлить сеанс':
             pc = Session.objects.filter(vk_id=user_vk_id).values('computer').last()['computer']
             if Session.objects.filter(vk_id=user_vk_id).exists():
-                send_message(ADMIN_VK_LINK, f"Шуровай помогать к ПК №{pc}!")
+                send_message(ADMIN_VK_ID, f"Шуровай помогать к ПК №{pc}!")
                 send_message(user_vk_id, "К тебе подойдет администратор. А пока держи мид.", create_kb_book(can_book, is_session_in_progress))
         
         if butt_text == "Отменить бронь":
