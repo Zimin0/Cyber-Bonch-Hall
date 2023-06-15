@@ -3,6 +3,8 @@ from booking.models import TimePeriod, Session
 from config.settings import DEBUG
 from config.config import AMOUNT_OF_SESSIONS_IN_A_DAY_FOR_ONE_USER
 
+from time import time as time_lib
+
 
 class Bot():
     """ Класс бота. Создается 1 раз при запуске скрипта. """
@@ -34,7 +36,7 @@ class Bot():
     
     def find_free_time_to_book(self) -> dict:
         """ Ищет свободные временные промежутки для бронирования"""
-        from time import time as time_lib
+        
         start_lib_time = time_lib()
         ready_to_book_dict = self.__ready_to_book_dict.copy()
         now_time_index = 0
@@ -52,7 +54,7 @@ class Bot():
                     if DEBUG: print('Времени уже больше, чем крайняя правая граница.')
                     now_time_index = len(self.__ready_to_book_list) - 1 
         if DEBUG: print(f"Ближайшее время к текущему - {self.__ready_to_book_list[now_time_index]}")
-        for time_i in range(now_time_index, len(self.__ready_to_book_list)-4): # идем от индекса текущего времени(чтобы нельзя было забронировать на прошлое)
+        for time_i in range(now_time_index+1, len(self.__ready_to_book_list)-4): # идем от индекса текущего времени(чтобы нельзя было забронировать на прошлое)
             time = self.__ready_to_book_list[time_i]
             if ready_to_book_dict[time] == None: # Свободный компьютер уже есть. Если None - то свободного компьютера нет.
                 for pc in Computer.objects.filter(ready_to_use=True): # Проходимся по всем компьютерам
