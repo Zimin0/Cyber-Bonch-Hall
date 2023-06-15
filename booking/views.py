@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 
 from config.settings import DEBUG
-from config.config import TOKEN, CONFIRMATION_TOKEN, SECRET_KEY, ADMIN_VK_LINK
+from config.config import TOKEN, CONFIRMATION_TOKEN, SECRET_KEY, ADMIN_VK_LINK, ADMIN_VK_ID
 from booking.models import TimePeriod, Computer
 from booking.bot import Bot
 from booking.models import Session
