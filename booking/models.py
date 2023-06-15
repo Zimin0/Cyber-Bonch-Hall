@@ -25,7 +25,10 @@ class Session(models.Model):
     def delete(self, bot):
         start_index = bot.get_ready_to_book_list().index(self.time_start)
         for i in range(6):
-            time_period = TimePeriod.objects.filter(time=bot.get_ready_to_book_list()[start_index + i], computer=self.computer).first()
+            try:
+                time_period = TimePeriod.objects.filter(time=bot.get_ready_to_book_list()[start_index + i], computer=self.computer).first()
+            except IndexError:
+                continue
             if time_period is not None:
                 time_period.status = "F"
                 time_period.save()
