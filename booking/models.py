@@ -115,7 +115,7 @@ class TimePeriod(models.Model):
     @staticmethod
     def get_now_in_sec() -> int:
         """ Возвращает текущее время в секундах с начала дня. """
-        now_struct = time.gmtime() # now in struct
+        now_struct = time.localtime() # now in struct
         hours = now_struct.tm_hour * 60 * 60 # часы в секундах
         minutes = now_struct.tm_min * 60 # минуты в секундах
         seconds = now_struct.tm_sec
