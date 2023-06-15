@@ -123,7 +123,7 @@ class Bot():
         sessions = Session.objects.filter(vk_id=user_vk_id) 
         now_time = TimePeriod.get_now_time_str()
         if DEBUG: now_time = '20:00'
-        
+
         if sessions.exists():
             if not(TimePeriod.compare_two_str_time(now_time, sessions.last().time_end)): #####!!!!!!!!1 переписать
                 return False
@@ -156,7 +156,10 @@ class Bot():
         """ Обновляет TimePeriod`ы в соответствии с созданной сессией. """
         start_index = self.__ready_to_book_list.index(session.time_start)
         for i in range(6):
-            time_period = TimePeriod.objects.filter(time=self.__ready_to_book_list[start_index + i], computer=session.computer).first()
+            try:
+                time_period = TimePeriod.objects.filter(time=self.__ready_to_book_list[start_index + i], computer=session.computer).first()
+            except IndexError:
+                continue
             if time_period is not None:
                 time_period.status = "B" if i < 5 else "TB"
                 time_period.save()
