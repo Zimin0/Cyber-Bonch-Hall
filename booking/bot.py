@@ -1,7 +1,8 @@
 from computers.models import Computer
 from booking.models import TimePeriod, Session
+from notifications.models import Notification
 from config.settings import DEBUG
-from config.config import AMOUNT_OF_SESSIONS_IN_A_DAY_FOR_ONE_USER
+from config.config import AMOUNT_OF_SESSIONS_IN_A_DAY_FOR_ONE_USER, SESSION_START_TEXT
 
 from time import time as time_lib
 
@@ -71,9 +72,22 @@ class Bot():
         """ Получает 16:45, возвращает 17:45 """
         return self.__ready_to_book_list[(self.__ready_to_book_list.index(time) + 4)]
     
+    def get_time_before_end(self, time:str, before_end:int) -> str:
+        """ 
+        Получает time=17:00, возвращает: 
+            5 - 17:55
+            10 - 17:50
+            15 - 17:45
+        """
+        end_time_sec = TimePeriod.start_end_time_to_sec(self.get_right_edge(time)) 
+        result_time_sec = end_time_sec - (before_end * 60)
+        result_time_str = TimePeriod.to_readable(result_time_sec)
+        
+        return result_time_str
+    
     def get_right_edge_yellow(self, time:str) -> str:
         """ Получает 16:45, возвращает 18:00 """
-        if time == '21:45': # !!!!!!!!!!!!!!!!!!!!!!!!!!!УЬРАТЬУБРАТЬУБРАТЬУБРАТЬ!!!!!!!!!!!!!!!!!!!!!!!!!!11
+        if time == '21:45': # !!!!!!!!!!!!!!!!!!!!!!!!!!!УЬРАТЬУБРАТЬУБРАТЬУБРАТЬУБРАТЬУБРАТЬ!!!!!!!!!!!!!!!!!!!!!!!!!!
             return '22:45'
         return self.__ready_to_book_list[(self.__ready_to_book_list.index(time) + 5)]
     
@@ -114,22 +128,6 @@ class Bot():
                 return False
             sessions.last().delete(self)
         return True
-
-        # """ Проверяет, можно ли забронировать эту сессию юзеру(подряд 2 нельзя). И соседние сессии тоже бранировать нельзя."""
-        # sessions = Session.objects.filter(vk_id=user_vk_id).values('time_start')
-        
-        # if DEBUG: print(f" Сессии пользователя {user_vk_id} = {sessions}")
-        # for s in sessions:
-        #     if abs(self.__ready_to_book_list.index(s['time_start']) - self.__ready_to_book_list.index(start_test_time)) <= 4:
-        #         if DEBUG: print(f"Сессию {s.time_start}:{s.time_end} НЕЛЬЗЯ забронировать! (Пользователь: {user_vk_id})")
-        #         return False
-            
-        #     elif sessions.count() >= AMOUNT_OF_SESSIONS_IN_A_DAY_FOR_ONE_USER:
-        #         if DEBUG: print(f"Ограничение по кол-ву сессий для одного юзера в день. (Пользователь: {user_vk_id})")
-        #         return False 
-            
-        # if DEBUG: print(f"Сессию {start_test_time} МОЖНО забронировать! (Пользователь: {user_vk_id})")
-        # return True
     
     def is_pc_available(self, time:str, pc:Computer) -> bool:
         """ 
@@ -153,7 +151,6 @@ class Bot():
             status = False
         return {'text':word_session, "status": status} 
     
-
     def upload_session_to_timeperiods(self, session):
         """ Обновляет TimePeriod`ы в соответствии с созданной сессией. """
         start_index = self.__ready_to_book_list.index(session.time_start)
@@ -174,3 +171,53 @@ class Bot():
             if TimePeriod.compare_two_str_time(sess.time_end , now_time) and TimePeriod.compare_two_str_time(now_time, sess.time_start):
                 return True
         return False
+    
+    def get_notific_times(self, time:str) -> dict:
+        """ Получает time в формате 16:45 - возвращает словарь с данными об уведомлениях. """
+        data = {}
+
+        data['start_time'] = time
+        data['before_15_end_time'] = self.get_time_before_end(time, 15)
+        data['before_10_end_time'] = self.get_time_before_end(time, 10)
+        data['before_5_end_time'] = self.get_time_before_end(time, 5)
+        data['end_time'] = self.get_right_edge(time)
+
+        return data
+
+    def create_session_notions(self, user_vk_id:int, times:dict, session:Session) -> None:
+        """ 
+        Создает уведомления для сессии:
+            * О начале сессии
+            * За 15 минут до конца
+            * За 10 минут до конца
+            * За 5 минут до конца
+            * О конце сессии
+        """
+        start_time = times['start_time'] 
+        before_15_end_time = times['before_15_end_time']
+        before_10_end_time = times['before_10_end_time']
+        before_5_end_time = times['before_5_end_time']
+        end_time = times['end_time']
+
+        ############# START #############
+        text = f'{SESSION_START_TEXT}\n Напомню: \n{session.computer}\n{start_time}-{end_time}\n Удачной игры!'
+        Notification.objects.create(start_time, text, user_vk_id, 'RTC', 'W', session)
+        #################################
+        ##### 15 MIN BEFORE THE END #####
+        text = f'У тебя осталось 15 минут! Конец в {end_time}!'
+        Notification.objects.create(before_15_end_time, text, user_vk_id, 'EW', 'W', session)
+        #################################
+        ##### 10 MIN BEFORE THE END #####
+        text = f'У тебя осталось 10 минут! Конец в {end_time}!'
+        Notification.objects.create(before_10_end_time, text, user_vk_id, 'EW', 'W', session)
+        #################################
+        ##### 5 MIN BEFORE THE END ######
+        text = f'У тебя осталось 5 минут! Конец в {end_time}!'
+        Notification.objects.create(before_5_end_time, text, user_vk_id, 'EW', 'W', session)
+        #################################
+        ##### 0 MIN BEFORE THE END ######
+        text = 'Сессия окончена! Спасибо за игру! <комментарий, связанный с игрой>'
+        Notification.objects.create(end_time, text, user_vk_id, 'EW', 'W', session)
+        #################################
+
+        

@@ -3,7 +3,6 @@ from config.config import BOOKING_TIME_START, BOOKING_TIME_END
 from django.core.validators import MaxValueValidator, MinValueValidator
 from computers.models import Computer
 import time
-from config.settings import DEBUG
 from django.core.cache import cache
 
 
@@ -58,9 +57,12 @@ class Session(models.Model):
 class TimePeriod(models.Model):
     """
     Временные промежутки по N минут
-    * time
-    * status
-    * computer---related_name='time_periods'
+        time:
+
+        status:
+
+        computer:
+            related_name='time_periods'
     """
     STATUS = (
         ('B', "Забронировано"),
@@ -131,8 +133,14 @@ class TimePeriod(models.Model):
 
     @staticmethod
     def to_readable(seconds:int) -> str: 
-        """Преобразует из секунд c начала дня в удобочитаемое время"""
-        return f"{seconds // 3600}:{seconds // 60 % 60}"
+        """ Из секунд (int) -> 16:00 """
+        hours = seconds // 3600
+        minutes = seconds // 60 % 60
+        if minutes < 10:
+            return f'{hours}:0{minutes}'
+        if hours < 10:
+            return f'0{hours}:{minutes}'
+        return f'{hours}:{minutes}'
     
     @staticmethod
     def compare_two_str_time(time1:str, time2:str) -> bool:

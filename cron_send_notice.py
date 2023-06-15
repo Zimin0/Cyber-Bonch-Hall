@@ -25,3 +25,9 @@ if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
     django.setup()
     send_notification()
+
+
+"""
+Редактирование Cron
+Для того чтобы настроить cron для запуска скрипта каждые две минуты, вам нужно открыть crontab файл для редактирования. Вы можете сделать это с помощью команды crontab -e в терминале.
+"""

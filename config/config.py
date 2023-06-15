@@ -7,6 +7,8 @@ ADMIN_VK_ID = 150619294 #'https://vk.com/zim1no' #'https://vk.com/id756821329'
 
 ADMIN_VK_LINK = 'https://vk.com/id756821329'
 
+SESSION_START_TEXT = "Твоя сесиия началась! Скорее за компьютер!"
+
 AMOUNT_OF_PC = 20
 BOOKING_TIME_START = 16
 BOOKING_TIME_END = 23
