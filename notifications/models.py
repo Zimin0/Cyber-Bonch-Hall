@@ -3,15 +3,15 @@ from django.db import models
 class Notification(models.Model):
     STATUSES = (
         ('W', 'Ожидает отправки'),
-        ('NTS', 'Should already be sent.'),
-        ('S', 'Already sent')
+        ('NTS', 'Уже должно быть оптравлено, но пока еще нет.'),
+        ('S', 'Оптравлено')
     )
 
     TYPES = (
-        ('NS', 'No status'),
-        ('RTC', 'Remind to take a computer'),
-        ('AC', 'Check if user at the computer'),
-        ('EW', 'Warning about end of the session.')
+        ('NS', 'Без типа'),
+        ('RTC', 'Напоминание о брони.'),
+        ('AC', 'Проверка, находится ли пользователь за компьютером.'),
+        ('EW', 'Предупреждение о конце сесиии.')
 
     )
     time = models.TimeField(verbose_name="Время", blank=False)
