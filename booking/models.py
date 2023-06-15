@@ -136,12 +136,12 @@ class TimePeriod(models.Model):
     
     @staticmethod
     def compare_two_str_time(time1:str, time2:str) -> bool:
-        """ Возвращает True, если time1 > time2. False в обратном случае. """
+        """ Возвращает True, если time1 >= time2. False в обратном случае. """
         time1_s = time1.split(':')
         time2_s = time2.split(':')
         if int(time1_s[0]) == int(time2_s[0]):
-            return time1_s[1] > time2_s[1]
-        return time1_s[0] > time2_s[0]
+            return time1_s[1] >= time2_s[1]
+        return time1_s[0] >= time2_s[0]
     
 
 
