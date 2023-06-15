@@ -3,6 +3,8 @@ from booking.models import TimePeriod, Session
 from config.settings import DEBUG
 from config.config import AMOUNT_OF_SESSIONS_IN_A_DAY_FOR_ONE_USER
 
+from time import time as time_lib
+
 
 class Bot():
     """ Класс бота. Создается 1 раз при запуске скрипта. """
@@ -34,7 +36,7 @@ class Bot():
     
     def find_free_time_to_book(self) -> dict:
         """ Ищет свободные временные промежутки для бронирования"""
-        from time import time as time_lib
+        
         start_lib_time = time_lib()
         ready_to_book_dict = self.__ready_to_book_dict.copy()
         now_time_index = 0
@@ -52,7 +54,7 @@ class Bot():
                     if DEBUG: print('Времени уже больше, чем крайняя правая граница.')
                     now_time_index = len(self.__ready_to_book_list) - 1 
         if DEBUG: print(f"Ближайшее время к текущему - {self.__ready_to_book_list[now_time_index]}")
-        for time_i in range(now_time_index, len(self.__ready_to_book_list)-4): # идем от индекса текущего времени(чтобы нельзя было забронировать на прошлое)
+        for time_i in range(now_time_index + 1, len(self.__ready_to_book_list)-4): # идем от индекса текущего времени(чтобы нельзя было забронировать на прошлое)
             time = self.__ready_to_book_list[time_i]
             if ready_to_book_dict[time] == None: # Свободный компьютер уже есть. Если None - то свободного компьютера нет.
                 for pc in Computer.objects.filter(ready_to_use=True): # Проходимся по всем компьютерам
@@ -128,10 +130,45 @@ class Bot():
     
     def is_possible_to_book_one_more(self, user_vk_id:int) -> bool:
         """ 
-        Функция возвращает False, если пользователь уже забронировал сессию сегодня и его забронированная сессия еще не подошла к концу. 
-        True в обратном случае.
+        Проверяет, можно ли забронировать эту сессию юзеру - \n
+        можно бронировать только одну сессию вперед. \n
+        Потом бронь открывается только после конца сессии. """
+
+        sessions = Session.objects.filter(vk_id=user_vk_id) 
+        now_time = TimePeriod.get_now_time_str()
+
+        if sessions.exists():
+            if not(TimePeriod.compare_two_str_time(now_time, sessions.last().time_end)): #####!!!!!!!!1 переписать
+                return False
+            sessions.last().delete(self)
+        return True
+
+        # """ Проверяет, можно ли забронировать эту сессию юзеру(подряд 2 нельзя). И соседние сессии тоже бранировать нельзя."""
+        # sessions = Session.objects.filter(vk_id=user_vk_id).values('time_start')
+        
+        # if DEBUG: print(f" Сессии пользователя {user_vk_id} = {sessions}")
+        # for s in sessions:
+        #     if abs(self.__ready_to_book_list.index(s['time_start']) - self.__ready_to_book_list.index(start_test_time)) <= 4:
+        #         if DEBUG: print(f"Сессию {s.time_start}:{s.time_end} НЕЛЬЗЯ забронировать! (Пользователь: {user_vk_id})")
+        #         return False
+            
+        #     elif sessions.count() >= AMOUNT_OF_SESSIONS_IN_A_DAY_FOR_ONE_USER:
+        #         if DEBUG: print(f"Ограничение по кол-ву сессий для одного юзера в день. (Пользователь: {user_vk_id})")
+        #         return False 
+            
+        # if DEBUG: print(f"Сессию {start_test_time} МОЖНО забронировать! (Пользователь: {user_vk_id})")
+        # return True
+    
+    def is_pc_available(self, time:str, pc:Computer) -> bool:
+        """ 
+        Проверяет, можно ли забронировать данный компьютер на данное время.
         """
-        pass
+        # проверяем левую границу временного промежутка
+        if TimePeriod.objects.filter(time=time, computer=pc).values('status').first()['status'] == 'F': # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Пример использования values
+            # проверяем правую границу временного промежутка
+            if TimePeriod.objects.filter(time=self.get_right_edge(time), computer=pc).values('status').first()['status'] == 'F':
+                return True
+        return False
 
     def get_my_session(self, user_vk_id:int) -> dict:
         """ Возвращает словарь с инфо о забронированной сессии юзера и наличии забронированной сессии. \n {'text':word_session, "status": status} """
@@ -153,3 +190,15 @@ class Bot():
             if time_period is not None:
                 time_period.status = "B" if i < 5 else "TB"
                 time_period.save()
+
+    def is_session_in_progress(self, user_vk_id:int) -> bool:
+        """ 
+        True - если сессия пользователя идет сейчас. \n 
+        False в обратном.
+        """
+        now_time = TimePeriod.get_now_time_str()
+        if Session.objects.filter(vk_id=user_vk_id).exists():
+            sess = Session.objects.filter(vk_id=user_vk_id).last()
+            if TimePeriod.compare_two_str_time(sess.time_end , now_time) and TimePeriod.compare_two_str_time(now_time, sess.time_start):
+                return True
+        return False

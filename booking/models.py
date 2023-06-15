@@ -8,7 +8,13 @@ from django.core.cache import cache
 
 
 class Session(models.Model):
-    """Сессия от X до Y"""
+    """
+    Сессия от X до Y, где X и Y - времена в формате |15:00|.
+    * time_start
+    * time_end
+    * computer---related_name="sessions"
+    * vk_id
+    """
     time_start = models.CharField(verbose_name="Время начала сеанса", blank=False, help_text="Формат: XX:XX", max_length=5)
     time_end = models.CharField(verbose_name="Время окончания сеанса", blank=False, help_text="Формат: XX:XX", max_length=5)
     computer = models.ForeignKey(Computer, verbose_name="Компьютер", on_delete=models.CASCADE, related_name="sessions")
@@ -26,13 +32,36 @@ class Session(models.Model):
                 time_period.save()
         super(Session, self).delete()
 
-    def save(self, *args, **kwargs):
-        cache.set('amount_of_sessions', Session.objects.count(), 60*60)
-        super(Session, self).save(*args, **kwargs)
+    # def save(self, bot, *args, **kwargs):
+    #     if not self.pk: # проверка, что Session создается, а не обновляется.
+    #         cache.set('amount_of_sessions', Session.objects.count(), 60*60) # кэшириуется новое кол-во сессий 
+    #         start_index = bot.get_ready_to_book_list().index(self.time_start)
+    #         for i in range(6):
+    #             time_period = TimePeriod.objects.filter(time=bot.get_ready_to_book_list()[start_index + i], computer=self.computer).first()
+    #             if time_period is not None:
+    #                 time_period.status = "B" if i < 5 else "TB"
+    #                 time_period.save()
+    #     super(Session, self).save(*args, **kwargs)
+
+    # def create(self, **obj_data):
+    #     cache.set('amount_of_sessions', Session.objects.count(), 60*60) # кэшириуется новое кол-во сессий 
+    #     start_index = bot.get_ready_to_book_list().index(self.time_start)
+    #     for i in range(6):
+    #         time_period = TimePeriod.objects.filter(time=bot.get_ready_to_book_list()[start_index + i], computer=self.computer).first()
+    #         if time_period is not None:
+    #             time_period.status = "B" if i < 5 else "TB"
+    #             time_period.save() 
+    #     return super().create(**obj_data)
+    
 
 
 class TimePeriod(models.Model):
-    """Временные промежутки по N минут"""
+    """
+    Временные промежутки по N минут
+    * time
+    * status
+    * computer---related_name='time_periods'
+    """
     STATUS = (
         ('B', "Забронировано"),
         ('F', 'Свободно'),
@@ -107,12 +136,12 @@ class TimePeriod(models.Model):
     
     @staticmethod
     def compare_two_str_time(time1:str, time2:str) -> bool:
-        """ Возвращает True, если time1 > time2. False в обратном случае. """
+        """ Возвращает True, если time1 >= time2. False в обратном случае. """
         time1_s = time1.split(':')
         time2_s = time2.split(':')
         if int(time1_s[0]) == int(time2_s[0]):
-            return time1_s[1] > time2_s[1]
-        return time1_s[0] > time2_s[0]
+            return time1_s[1] >= time2_s[1]
+        return time1_s[0] >= time2_s[0]
     
 
 
