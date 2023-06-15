@@ -40,7 +40,7 @@ class Bot():
         
         start_lib_time = time_lib()
         ready_to_book_dict = self.__ready_to_book_dict.copy()
-        now_time_index = 0
+        now_time_index = -1
         if not(DEBUG):
             now_time_str = TimePeriod.get_now_time_str() # текущее время в виде "16:45"
             if DEBUG: print(TimePeriod.get_closest_time_div_15(now_time_str))
@@ -50,7 +50,7 @@ class Bot():
             except ValueError: # времени уже больше, чем крайняя граница 
                 if not(TimePeriod.compare_two_str_time(now_time_str, self.__ready_to_book_list[0])):
                     if DEBUG: print('Времени еще меньше, чем крайняя левая граница.')
-                    now_time_index = 0
+                    now_time_index = -1
                 else:
                     if DEBUG: print('Времени уже больше, чем крайняя правая граница.')
                     now_time_index = len(self.__ready_to_book_list) - 1 
