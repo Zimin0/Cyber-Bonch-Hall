@@ -82,7 +82,8 @@ def create_choose_time() -> tuple:
         cache.set('amount_of_sessions', amount_of_sessions, 60*60)
     else:
         value = cache.get('free_times', default=None)
-        if DEBUG: print(f"Беру free_times из кэша."); print(f'Значение по ключу free_times в кешэ: {value}')
+        logger.info(f"Беру free_times из кэша.")
+        logger.info(f'Значение по ключу free_times в кешэ: {value}')
         if value is None:
             free_times = bot.find_free_time_to_book()
             cache.set('free_times', free_times, 60*60)
@@ -118,7 +119,7 @@ def create_choose_pc(time:str) -> VkKeyboard:
     for pc in computers:
         keyboard.add_button(str(pc), color=VkKeyboardColor.POSITIVE, payload=json.dumps(f"{str(pc.number)}+{time}"))
         line_above = False
-        if DEBUG: print(f"Кнопка{count+1} Строка {count//3 + 1}")
+        logger.info(f"Кнопка{count+1} Строка {count//3 + 1}")
         count += 1
         if count % 3 == 2 and not(line_above):
             keyboard.add_line() 
@@ -178,11 +179,11 @@ def handle_computer_booking(data, user_vk_id:int, can_book:bool, is_session_in_p
    
 @csrf_exempt
 def index(request):
-    logger.info(f"Логгер работает!!!")
-    logging.debug('debug')
-    logging.error('error')
-    logging.warning('warning')
-    logging.critical('critical')
+    # logger.info(f"Логгер работает!!!")
+    # logging.debug('debug')
+    # logging.error('error')
+    # logging.warning('warning')
+    # logging.critical('critical')
     if request.method != "POST":
         return get_good_response()
     
@@ -195,27 +196,25 @@ def index(request):
     can_book = bot.is_possible_to_book(user_vk_id) # Может ли пользователь бронировать сессии
     is_session_in_progress = bot.is_session_in_progress(user_vk_id) # идет ли сейчас сессия у пользователя
 
-    if DEBUG:
-        print("--------------------КЭШ--------------------")
-        print(f"amount_of_sessions = {cache.get('amount_of_sessions')}")
-        print(f"free_times = {cache.get('free_times')}")
-        print("-------------------------------------------")
+    logger.info("--------------------КЭШ--------------------")
+    logger.info(f"amount_of_sessions = {cache.get('amount_of_sessions')}")
+    logger.info(f"free_times = {cache.get('free_times')}")
+    logger.info("-------------------------------------------")
 
     if data['type'] == 'message_new':
 
         if not(DEBUG):
             if bot.is_message_was_writen(data):
-                if DEBUG: print("Введено сообщение с клавиатуры.")
+                logger.info("Введено сообщение с клавиатуры.")
                 send_message(user_vk_id, f'Используй кнопки, пожалуйста!', create_kb_book(can_book, is_session_in_progress))
                 return get_good_response()
             
         butt_text = get_message_text(data)
 
-        if DEBUG:
-            print("Новое сообщение с кнопки ", f"= '{butt_text}'")
-            print('-------------------------------------------------------------------')
-            print(data)
-            print('-------------------------------------------------------------------')
+        logger.info("Новое сообщение с кнопки ", f"= '{butt_text}'")
+        logger.info('-------------------------------------------------------------------')
+        logger.info(data)
+        logger.info('-------------------------------------------------------------------')
 
         if butt_text == "Забронировать ПК":
             text = "Выбери время бронирования:"
@@ -267,13 +266,13 @@ def index(request):
 @csrf_exempt
 def confirm(request):
     data = json.loads(request.body)
-    if DEBUG: print("confirm вызван")
+    logger.info("confirm вызван")
 
     if data['secret'] != SECRET_KEY:
-        if DEBUG: print('SECRET_KEY неверен!')
+        logger.info('SECRET_KEY неверен!')
         return HttpResponse("SECRET_KEY неверен!", content_type="text/plain", status=500) # !!!!!!!!!!!!!!!!!!!!!!!!
 
-    if DEBUG: print("Удачная проверка токена!")
+    logger.info("Удачная проверка токена!")
     return get_good_response(CONFIRMATION_TOKEN)
 
 @login_required
