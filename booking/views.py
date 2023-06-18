@@ -1,7 +1,8 @@
 import vk_api
+from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from random import randint
 import json
-from vk_api.keyboard import VkKeyboard, VkKeyboardColor
+import logging
 
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import HttpResponse, render, redirect
@@ -14,9 +15,7 @@ from booking.models import TimePeriod, Computer
 from booking.bot import Bot
 from booking.models import Session
 
-### git add . ; git commit -m "replace 1 to not(debug)"; git push origin main
 
-import logging
 logger = logging.getLogger(__name__)
 
 bot = Bot()
@@ -75,11 +74,9 @@ def create_choose_time() -> tuple:
     amount_of_sessions = Session.objects.count() # получаем кол-во сессий'
     logger.info(f"Кол-во сессий в БД: {amount_of_sessions}")
     amount_of_sessions_cache = cache.get('amount_of_sessions', default=None)
-    if DEBUG: print()
     logger.info(f"Кол-во сессий в кэше: {amount_of_sessions_cache}")
     if amount_of_sessions != amount_of_sessions_cache: # Если появились новые сессии, то обновляем список доступных временных промежутков
-        if DEBUG: print(f"В базе данных появились новые сессии.")
-        logger.info
+        logger.info(f"В базе данных появились новые сессии.")
         free_times = bot.find_free_time_to_book()
         cache.set('free_times', free_times, 60*60)
         cache.set('amount_of_sessions', amount_of_sessions, 60*60)
@@ -182,6 +179,10 @@ def handle_computer_booking(data, user_vk_id:int, can_book:bool, is_session_in_p
 @csrf_exempt
 def index(request):
     logger.info(f"Логгер работает!!!")
+    logging.debug('debug')
+    logging.error('error')
+    logging.warning('warning')
+    logging.critical('critical')
     if request.method != "POST":
         return get_good_response()
     

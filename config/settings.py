@@ -28,7 +28,7 @@ DEBUG = True
 
 CONN_MAX_AGE = 60 # длительность соединения с базой данных
 
-ALLOWED_HOSTS = ['488d-91-238-229-3.ngrok-free.app', '*', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1']
 CSRF_TRUSTED_ORIGINS = ['https://488d-91-238-229-3.ngrok-free.app']
 
 # Application definition
