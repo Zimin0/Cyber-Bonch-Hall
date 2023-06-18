@@ -210,7 +210,7 @@ def index(request):
             
         butt_text = get_message_text(data)
 
-        logger.info("Новое сообщение с кнопки ", f"= '{butt_text}'")
+        logger.info(f"Новое сообщение с кнопки = '{butt_text}'")
         logger.info('-------------------------------------------------------------------')
         logger.info(data)
         logger.info('-------------------------------------------------------------------')
