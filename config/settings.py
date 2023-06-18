@@ -45,7 +45,7 @@ LOGGING = {
     },
     'root': {
         'handlers': ['secure_file'],
-        'level': 'INFO',
+        'level': 'DEBUG',
     },
 }
 
