@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 
 from config.settings import DEBUG
-from config.config import TOKEN, CONFIRMATION_TOKEN, SECRET_KEY, ADMIN_VK_LINK, ADMIN_VK_ID
+from config.config import TOKEN, CONFIRMATION_TOKEN, SECRET_KEY, ADMIN_VK_LINK, ADMIN_VK_ID, PASS_USERS_LIST
 from booking.models import TimePeriod, Computer
 from booking.bot import Bot
 from booking.models import Session
@@ -202,7 +202,6 @@ def index(request):
     logger.info("-------------------------------------------")
 
     if data['type'] == 'message_new':
-
         if not(DEBUG):
             if bot.is_message_was_writen(data):
                 logger.info("Введено сообщение с клавиатуры.")
@@ -215,6 +214,10 @@ def index(request):
         logger.info('-------------------------------------------------------------------')
         logger.info(data)
         logger.info('-------------------------------------------------------------------')
+
+        if user_vk_id not in PASS_USERS_LIST:
+            send_message(user_vk_id, f"Бот пока доступен только для избранных!")
+            return get_good_response()
 
         if butt_text == "Забронировать ПК":
             text = "Выбери время бронирования:"
