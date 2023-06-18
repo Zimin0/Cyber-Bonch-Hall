@@ -24,7 +24,7 @@ import os
 SECRET_KEY = 'django-insecure-$f2acfzps-a%k8&n)bz$2rcy+sr956i67*=yg4pcz-z6_9epz+'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 CONN_MAX_AGE = 60 # длительность соединения с базой данных
 
