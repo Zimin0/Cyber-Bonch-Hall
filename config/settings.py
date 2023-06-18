@@ -37,17 +37,20 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
-        'secure_file': {
-            'class': 'logging.FileHandler',
+        'rotating_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': '/home/cloudadmin/vkbotbook/bin/logs/vkbootbot.log',
-            'mode': 'a',
+            'maxBytes': 1024 * 1024 * 100,  # 100 MB
+            'backupCount': 10,
         },
     },
     'root': {
-        'handlers': ['secure_file'],
+        'handlers': ['rotating_file'],
         'level': 'DEBUG',
     },
 }
+"""В этом примере мы используем обработчик rotating_file, который записывает сообщения логов в ротирующий файл в каталоге /var/log/django/. Файл лога будет изменен, когда он достигнет размера 100 МБ, и будет храниться до 10 резервных копий."""
+
 
 CACHES = {
     'default': {
