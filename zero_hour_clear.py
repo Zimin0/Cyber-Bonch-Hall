@@ -5,9 +5,9 @@ import logging
 
 """ Внешний скрипт вне Django. Но благодаря конструкции ниже позволяет получить доступ к моделям."""
 def clear_database():
-    logger = logging.getLogger(__name__)
     from booking.models import Session, TimePeriod
     from django.core.cache import cache
+    logger = logging.getLogger(__name__)
     cache.clear() # Очистка кэша
     logger.info("Кэш очищен.")
     Session.objects.all().delete()

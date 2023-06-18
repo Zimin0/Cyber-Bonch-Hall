@@ -216,7 +216,7 @@ def index(request):
         logger.info('-------------------------------------------------------------------')
 
         if user_vk_id not in PASS_USERS_LIST:
-            send_message(user_vk_id, f"Бот пока доступен только для избранных!")
+            send_message(user_vk_id, f"Бот пока доступен только для избранных!", get_clear_keyboard())
             return get_good_response()
 
         if butt_text == "Забронировать ПК":
