@@ -33,6 +33,22 @@ CSRF_TRUSTED_ORIGINS = ['https://488d-91-238-229-3.ngrok-free.app']
 
 # Application definition
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'secure_file': {
+            'class': 'logging.FileHandler',
+            'filename': '/home/cloudadmin/vkbotbook/bin/logs/vkbootbot.log',
+            'mode': 'a',
+        },
+    },
+    'root': {
+        'handlers': ['secure_file'],
+        'level': 'INFO',
+    },
+}
+
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
